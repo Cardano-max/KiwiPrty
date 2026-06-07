@@ -1,0 +1,323 @@
+// Kiwi Party AI — core data model (MVP slice).
+// Implemented for SQLite (zero-config local dev). It is written to stay portable to
+// PostgreSQL for production: enums are modelled as String with documented values,
+// list fields are stored as JSON strings, and all money is integer PAISE (never floats).
+// See docs/03-data-model.md for the full logical model and the "tricky parts".
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Identity & roles
+// role: customer | supplier | admin
+// ---------------------------------------------------------------------------
+model User {
+  id           String   @id @default(cuid())
+  phone        String   @unique
+  email        String?  @unique
+  name         String?
+  passwordHash String? // staff only; buyers/suppliers use OTP
+  role         String   @default("customer")
+  status       String   @default("active") // active | suspended
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  supplier  SupplierProfile?
+  customer  CustomerProfile?
+  auditLogs AuditLog[]
+}
+
+// ---------------------------------------------------------------------------
+// Supplier
+// businessType: manufacturer | importer | wholesaler
+// kycStatus:    draft | submitted | under_review | approved | rejected
+// ---------------------------------------------------------------------------
+model SupplierProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName       String
+  businessType      String   @default("wholesaler")
+  gstNumber         String?
+  panNumber         String?
+  city              String?
+  state             String?
+  warehouseLocation String?
+  logoUrl           String?
+  mobiles           String   @default("[]") // JSON array of up to 3 phone numbers
+  kycStatus         String   @default("submitted")
+  verifiedBadges    String   @default("[]") // JSON array: gst_verified, manufacturer, importer
+  trustScore        Int      @default(0)
+  planStatus        String   @default("inactive") // inactive | active | past_due | expired
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  products       Product[]
+  supplierOrders SupplierOrder[]
+  inquiries      Inquiry[]
+  subscriptions  Subscription[]
+}
+
+// ---------------------------------------------------------------------------
+// Customer
+// businessCategory: party_shop | decorator | event_planner | wholesaler
+// ---------------------------------------------------------------------------
+model CustomerProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopName         String
+  ownerName        String?
+  gstNumber        String?
+  panNumber        String?
+  businessCategory String   @default("party_shop")
+  city             String?
+  state            String?
+  kycStatus        String   @default("submitted")
+  planStatus       String   @default("inactive")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  addresses     Address[]
+  carts         Cart[]
+  orders        Order[]
+  inquiries     Inquiry[]
+  subscriptions Subscription[]
+}
+
+model Address {
+  id                 String          @id @default(cuid())
+  customerId         String
+  customer           CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type               String          @default("delivery") // billing | delivery
+  line1              String
+  line2              String?
+  city               String
+  state              String
+  pincode            String
+  isDefault          Boolean         @default(false)
+  transportPreference String?
+}
+
+// ---------------------------------------------------------------------------
+// Catalogue
+// ---------------------------------------------------------------------------
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  parentId    String?
+  parent      Category?  @relation("CategoryToSub", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryToSub")
+  icon        String?
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  products    Product[]
+}
+
+// status: active | inactive | out_of_stock
+// tags JSON array e.g. ["clearance","festival:diwali","new_arrival"]
+model Product {
+  id              String   @id @default(cuid())
+  supplierId      String
+  supplier        SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  name            String
+  slug            String   @unique
+  sku             String?
+  description     String?
+  basePricePaise  Int // unit price for qty below first slab / default
+  gstPercent      Int      @default(18)
+  moq             Int      @default(1)
+  quantityMultiple Int     @default(1)
+  stockQuantity   Int      @default(0)
+  packingDetails  String?
+  size            String?
+  material        String?
+  color           String?
+  weightGrams     Int?
+  deliveryTimeDays Int     @default(7)
+  serviceCity     String?
+  unitLabel       String   @default("Piece") // Piece | Set | Pack ...
+  status          String   @default("active")
+  tags            String   @default("[]")
+  viewCount       Int      @default(0)
+  inquiryCount    Int      @default(0)
+  orderCount      Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  images     ProductImage[]
+  priceSlabs PriceSlab[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+  inquiries  Inquiry[]
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String?
+  sortOrder Int     @default(0)
+}
+
+// Quantity-based price tiers. unitPricePaise applies when minQty <= qty <= maxQty.
+// maxQty null = open-ended top slab. See docs/03 §A.
+model PriceSlab {
+  id             String  @id @default(cuid())
+  productId      String
+  product        Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  minQty         Int
+  maxQty         Int?
+  unitPricePaise Int
+}
+
+// ---------------------------------------------------------------------------
+// Cart
+// ---------------------------------------------------------------------------
+model Cart {
+  id         String          @id @default(cuid())
+  customerId String          @unique
+  customer   CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items      CartItem[]
+  updatedAt  DateTime        @updatedAt
+}
+
+model CartItem {
+  id         String   @id @default(cuid())
+  cartId     String
+  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  supplierId String
+  quantity   Int
+  createdAt  DateTime @default(now())
+
+  @@unique([cartId, productId])
+}
+
+// ---------------------------------------------------------------------------
+// Orders — parent Order splits into one SupplierOrder per supplier (docs/03 §B)
+// ---------------------------------------------------------------------------
+model Order {
+  id              String          @id @default(cuid())
+  customerId      String
+  customer        CustomerProfile @relation(fields: [customerId], references: [id])
+  totalPaise      Int
+  paymentStatus   String          @default("paid") // created | paid | failed | refunded
+  placedAt        DateTime        @default(now())
+  supplierOrders  SupplierOrder[]
+}
+
+// status: new | accepted | packed | dispatched | delivered | cancelled
+model SupplierOrder {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  supplierId  String
+  supplier    SupplierProfile @relation(fields: [supplierId], references: [id])
+  status      String   @default("new")
+  subtotalPaise Int
+  gstPaise    Int
+  totalPaise  Int
+  createdAt   DateTime @default(now())
+
+  items   OrderItem[]
+  invoice Invoice?
+}
+
+model OrderItem {
+  id              String        @id @default(cuid())
+  supplierOrderId String
+  supplierOrder   SupplierOrder @relation(fields: [supplierOrderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  productName     String
+  quantity        Int
+  unitPricePaise  Int // snapshot at checkout
+  gstPercent      Int
+  lineTotalPaise  Int // (unit * qty) + gst
+}
+
+// One GST invoice per SupplierOrder. number is sequential & immutable.
+model Invoice {
+  id              String        @id @default(cuid())
+  supplierOrderId String        @unique
+  supplierOrder   SupplierOrder @relation(fields: [supplierOrderId], references: [id], onDelete: Cascade)
+  number          String        @unique
+  type            String        @default("gst_invoice")
+  amountPaise     Int
+  gstPaise        Int
+  issuedAt        DateTime      @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Inquiries / leads
+// ---------------------------------------------------------------------------
+model Inquiry {
+  id         String          @id @default(cuid())
+  customerId String
+  customer   CustomerProfile @relation(fields: [customerId], references: [id])
+  productId  String
+  product    Product         @relation(fields: [productId], references: [id])
+  supplierId String
+  supplier   SupplierProfile @relation(fields: [supplierId], references: [id])
+  message    String
+  channel    String          @default("in_app") // in_app | whatsapp
+  status     String          @default("open") // open | responded | closed
+  score      String          @default("warm") // hot | warm | cold (AI lead scoring)
+  createdAt  DateTime        @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Subscriptions & billing
+// ---------------------------------------------------------------------------
+model SubscriptionPlan {
+  id         String  @id @default(cuid())
+  name       String
+  audience   String // supplier | customer
+  pricePaise Int
+  gstPercent Int     @default(18)
+  interval   String // monthly | yearly
+  features   String  @default("[]") // JSON array
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id            String           @id @default(cuid())
+  planId        String
+  plan          SubscriptionPlan @relation(fields: [planId], references: [id])
+  supplierId    String?
+  supplier      SupplierProfile? @relation(fields: [supplierId], references: [id])
+  customerId    String?
+  customer      CustomerProfile? @relation(fields: [customerId], references: [id])
+  status        String           @default("active") // active | past_due | cancelled | expired
+  periodStart   DateTime         @default(now())
+  periodEnd     DateTime
+  autoRenew     Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Audit log — approvals, KYC reads, refunds, admin actions
+// ---------------------------------------------------------------------------
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String?
+  detail     String? // JSON
+  createdAt  DateTime @default(now())
+}

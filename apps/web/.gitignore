@@ -1,0 +1,22 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# local database (SQLite dev)
+*.db
+*.db-journal
+/prisma/dev.db*
+
+# env
+.env
+
+# misc
+*.tsbuildinfo
+.DS_Store
