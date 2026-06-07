@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { searchProducts, listCategories, getCities, type ProductSort } from "@/server/services/catalog";
+import { parseSearchQuery, type ParsedSearch } from "@/server/ai";
+import { formatPaise } from "@/domain/money";
 import ProductCard from "@/components/ProductCard";
+import { Badge } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -31,18 +34,29 @@ function buildQuery(base: SP, override: Partial<SP>): string {
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
-  const [result, categories, cities] = await Promise.all([
-    searchProducts({
-      q: sp.q,
-      categorySlug: sp.category,
-      city: sp.city,
-      tag: sp.tag,
-      sort: (sp.sort as ProductSort) ?? "popular",
-      page: Number(sp.page ?? 1),
-    }),
-    listCategories(),
-    getCities(),
-  ]);
+  const [categories, cities] = await Promise.all([listCategories(), getCities()]);
+
+  // AI search: turn a natural-language query into structured filters.
+  let parsed: ParsedSearch | null = null;
+  if (sp.q && sp.q.trim()) {
+    parsed = await parseSearchQuery(
+      sp.q,
+      categories.map((c) => ({ name: c.name, slug: c.slug })),
+      cities,
+    );
+  }
+
+  const result = await searchProducts({
+    q: parsed ? parsed.terms || undefined : sp.q,
+    categorySlug: sp.category ?? parsed?.categorySlug,
+    city: sp.city ?? parsed?.city,
+    tag: sp.tag ?? parsed?.tag,
+    priceMaxPaise: parsed?.priceMaxPaise,
+    sort: (sp.sort as ProductSort) ?? "popular",
+    page: Number(sp.page ?? 1),
+  });
+
+  const inferred = parsed && (parsed.priceMaxPaise || parsed.categorySlug || parsed.city || parsed.tag);
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
@@ -101,6 +115,20 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
       {/* Results */}
       <div className="flex-1">
+        {inferred && parsed && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg bg-kiwi-50 px-3 py-2 text-xs text-kiwi-800">
+            <span className="font-semibold">🤖 AI understood:</span>
+            {parsed.categorySlug && (
+              <Badge>{categories.find((c) => c.slug === parsed.categorySlug)?.name ?? parsed.categorySlug}</Badge>
+            )}
+            {parsed.priceMaxPaise && <Badge>under {formatPaise(parsed.priceMaxPaise)}</Badge>}
+            {parsed.city && <Badge>{parsed.city}</Badge>}
+            {parsed.tag && <Badge>{parsed.tag.replace("_", " ")}</Badge>}
+            {parsed.source === "fallback" && (
+              <span className="text-kiwi-400">· set ANTHROPIC_API_KEY for smarter parsing</span>
+            )}
+          </div>
+        )}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="text-sm text-gray-600">
             {result.total} product{result.total === 1 ? "" : "s"}

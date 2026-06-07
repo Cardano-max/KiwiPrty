@@ -8,6 +8,7 @@ export interface SearchOptions {
   categorySlug?: string;
   city?: string;
   tag?: string;
+  priceMaxPaise?: number;
   sort?: ProductSort;
   page?: number;
   pageSize?: number;
@@ -49,6 +50,7 @@ export async function searchProducts(opts: SearchOptions) {
   if (opts.categorySlug) where.category = { slug: opts.categorySlug };
   if (opts.city) where.serviceCity = opts.city;
   if (opts.tag) where.tags = { contains: opts.tag };
+  if (opts.priceMaxPaise) where.basePricePaise = { lte: opts.priceMaxPaise };
 
   const orderBy: Prisma.ProductOrderByWithRelationInput =
     opts.sort === "price_asc"
