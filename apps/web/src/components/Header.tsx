@@ -49,9 +49,14 @@ export default async function Header() {
           )}
 
           {user?.role === "customer" && (
-            <Link href="/orders" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
-              Orders
-            </Link>
+            <>
+              <Link href="/wishlist" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
+                Wishlist
+              </Link>
+              <Link href="/orders" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
+                Orders
+              </Link>
+            </>
           )}
           {user?.role === "supplier" && (
             <Link href="/supplier" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">

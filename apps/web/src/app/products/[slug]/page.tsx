@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import { getProductBySlug } from "@/server/services/catalog";
 import { getCustomerId } from "@/server/session";
 import { listProductReviews, getCustomerReview, hasPurchased } from "@/server/services/reviews";
+import { isFavorited } from "@/server/services/favorites";
 import { formatPaise } from "@/domain/money";
 import { TagList, SubmitButton, Badge, Stars } from "@/components/ui";
-import { addToCartAction, inquiryAction, createReviewAction } from "@/server/actions";
+import { addToCartAction, inquiryAction, createReviewAction, toggleFavoriteAction } from "@/server/actions";
 import { parseList } from "@/server/mappers";
 
 export const dynamic = "force-dynamic";
@@ -26,10 +27,11 @@ export default async function ProductPage({
   const badges = parseList(product.supplier.verifiedBadges);
 
   const customerId = await getCustomerId();
-  const [reviews, purchased, myReview] = await Promise.all([
+  const [reviews, purchased, myReview, favorited] = await Promise.all([
     listProductReviews(product.id),
     customerId ? hasPurchased(customerId, product.id) : Promise.resolve(false),
     customerId ? getCustomerReview(customerId, product.id) : Promise.resolve(null),
+    customerId ? isFavorited(customerId, product.id) : Promise.resolve(false),
   ]);
 
   return (
@@ -144,6 +146,20 @@ export default async function ProductPage({
             <SubmitButton>Add to cart</SubmitButton>
           </form>
         )}
+
+        <form action={toggleFavoriteAction} className="mt-3">
+          <input type="hidden" name="productId" value={product.id} />
+          <input type="hidden" name="redirectTo" value={`/products/${product.slug}`} />
+          <button
+            className={`inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+              favorited
+                ? "border-party-pink bg-pink-50 text-party-pink"
+                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            {favorited ? "♥ Saved to wishlist" : "♡ Save to wishlist"}
+          </button>
+        </form>
 
         {/* Supplier */}
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4">

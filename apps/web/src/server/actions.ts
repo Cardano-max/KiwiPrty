@@ -13,6 +13,7 @@ import { checkout } from "@/server/services/orders";
 import { setSupplierOrderStatus } from "@/server/services/orders";
 import { createInquiry } from "@/server/services/inquiries";
 import { createReview } from "@/server/services/reviews";
+import { toggleFavorite } from "@/server/services/favorites";
 import { createStory } from "@/server/services/stories";
 import { createProduct } from "@/server/services/suppliers";
 import { setSupplierKyc, setCustomerKyc } from "@/server/services/admin";
@@ -189,6 +190,19 @@ export async function setOrderStatusAction(formData: FormData) {
   }
   revalidatePath("/supplier/orders");
   redirect("/supplier/orders");
+}
+
+// --- wishlist ---
+
+export async function toggleFavoriteAction(formData: FormData) {
+  const productId = str(formData.get("productId"));
+  const redirectTo = str(formData.get("redirectTo")) || "/wishlist";
+  const customerId = await getCustomerId();
+  if (!customerId) redirect(`/login?next=${encodeURIComponent(redirectTo)}`);
+  await toggleFavorite(customerId as string, productId);
+  revalidatePath(redirectTo);
+  revalidatePath("/wishlist");
+  redirect(redirectTo);
 }
 
 // --- reviews ---
