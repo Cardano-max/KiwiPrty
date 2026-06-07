@@ -97,7 +97,7 @@ Full details, API reference, and the implemented-vs-deferred list are in
 | Architecture & tech stack | ✅ Recommended |
 | Data model | ✅ Drafted + implemented (Prisma) |
 | MVP scope & roadmap | ✅ Defined |
-| **MVP core app** | ✅ **Built & verified** — catalogue, search, multi-supplier cart/orders, GST invoices, supplier dashboard, admin KYC, OTP auth, REST API; build green; 24 unit tests pass |
+| **MVP core app** | ✅ **Built & verified** — catalogue, AI search, multi-supplier cart/orders, GST invoices, inquiries/leads, **Supplier Stories**, reviews & trust score, wishlist, buyer/supplier reports, supplier dashboard/profile, admin KYC, AI product descriptions, OTP auth, REST API; build green; 31 unit tests pass; CI green |
 | Payments / WhatsApp / SMS | ⏳ Mocked behind clear seams (Razorpay / BSP / MSG91 are deferred integrations) |
 | AI agents, mobile apps, Stories, full SEO | ⛔ Deferred to later phases (see doc 4 & 5) |
 

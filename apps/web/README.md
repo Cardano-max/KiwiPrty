@@ -49,6 +49,14 @@ to see the order and lead, or the **admin** to approve the pending supplier ("Ne
   supplier / admin), registration for buyers and suppliers (suppliers start pending KYC).
 - **Catalogue** — categories, products with images, **price slabs**, MOQ, quantity-multiples, stock,
   tags; keyword + faceted search (category / city / tag / sort) with pagination.
+- **AI search** — natural-language queries parsed into filters (price ceiling, category, city, tags),
+  e.g. "baby shower decoration under ₹5000"; deterministic fallback, Claude-powered with a key.
+- **Reviews & ratings** — verified-purchase-gated product reviews, product rating + supplier trust
+  score derived from them.
+- **Wishlist** — buyers save products; ♥ toggle + `/wishlist`.
+- **Reports** — buyer purchase report (spend by supplier/category) and supplier analytics
+  (view→inquiry→order funnel, top products, city-wise demand).
+- **Public supplier profile** — `/suppliers/[id]` with badges, trust score, stories and products.
 - **Pricing & ordering (the hard parts, unit-tested)** — server-side slab resolution + MOQ/multiple
   validation + GST math; **multi-supplier cart → per-supplier order split**; **sequential GST
   invoice per supplier order**; stock decrement; reorder-ready order history.
@@ -97,10 +105,10 @@ prisma/
 ## What's NOT in this slice (deferred — see /docs roadmap)
 
 Real payment gateway (Razorpay) & SMS/WhatsApp sending are **mocked/stubbed** behind clear seams
-(OTP is returned in dev; checkout marks payment paid). Not yet built: the AI sales/supplier agents
-& semantic search, mobile apps (React Native), live selling & community, full SEO, demand
-forecasting, advanced reports, and real-time logistics. (Supplier Stories is implemented as a core
-slice; live selling and AI story generation remain future work.) These are scoped in
+(OTP is returned in dev; checkout marks payment paid). Not yet built: the agentic AI sales/supplier
+assistants & semantic/vector search, mobile apps (React Native), live selling & community, full SEO,
+and real-time logistics. (AI search does NL query understanding today; semantic vector search is the
+next step. Supplier Stories is implemented; live selling and AI story generation remain future work.) These are scoped in
 [`../../docs/04-mvp-scope.md`](../../docs/04-mvp-scope.md) and
 [`../../docs/05-roadmap-and-estimates.md`](../../docs/05-roadmap-and-estimates.md).
 
