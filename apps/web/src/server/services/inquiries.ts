@@ -6,6 +6,7 @@ export async function createInquiry(
   productId: string,
   message: string,
   channel: "in_app" | "whatsapp" = "in_app",
+  storyId?: string,
 ) {
   const product = await prisma.product.findUnique({ where: { id: productId } });
   if (!product) throw new Error("Product not found");
@@ -25,6 +26,7 @@ export async function createInquiry(
       message,
       channel,
       score,
+      storyId: storyId || null,
     },
   });
   await prisma.product.update({

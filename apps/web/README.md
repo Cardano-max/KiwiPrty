@@ -54,6 +54,9 @@ to see the order and lead, or the **admin** to approve the pending supplier ("Ne
   invoice per supplier order**; stock decrement; reorder-ready order history.
 - **Inquiries / leads** — "Get best price" inquiries routed to suppliers with heuristic hot/warm/cold
   **lead scoring**.
+- **Supplier Stories (flagship)** — visual story feed (24h expiry + permanent highlights), story
+  detail with add-to-cart / get-best-price CTAs, per-customer **view tracking**, story-attributed
+  leads, and a supplier "post story + analytics (views / leads)" manager. See `docs/07`.
 - **Supplier** — dashboard (views / orders / inquiries / sales), product list, add-product form,
   order status management.
 - **Admin** — platform KPIs (suppliers, customers, GMV, subscription revenue) and **KYC approval**
@@ -92,8 +95,9 @@ prisma/
 
 Real payment gateway (Razorpay) & SMS/WhatsApp sending are **mocked/stubbed** behind clear seams
 (OTP is returned in dev; checkout marks payment paid). Not yet built: the AI sales/supplier agents
-& semantic search, mobile apps (React Native), Supplier Stories, community, full SEO, demand
-forecasting, advanced reports, and real-time logistics. These are scoped in
+& semantic search, mobile apps (React Native), live selling & community, full SEO, demand
+forecasting, advanced reports, and real-time logistics. (Supplier Stories is implemented as a core
+slice; live selling and AI story generation remain future work.) These are scoped in
 [`../../docs/04-mvp-scope.md`](../../docs/04-mvp-scope.md) and
 [`../../docs/05-roadmap-and-estimates.md`](../../docs/05-roadmap-and-estimates.md).
 

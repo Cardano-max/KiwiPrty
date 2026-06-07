@@ -33,6 +33,9 @@ export default async function Header() {
           <Link href="/products" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
             Marketplace
           </Link>
+          <Link href="/stories" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
+            Stories
+          </Link>
 
           {(!user || user.role === "customer") && (
             <Link href="/cart" className="relative rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">

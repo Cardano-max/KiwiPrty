@@ -12,6 +12,7 @@ import { addToCart, updateCartItem, removeCartItem } from "@/server/services/car
 import { checkout } from "@/server/services/orders";
 import { setSupplierOrderStatus } from "@/server/services/orders";
 import { createInquiry } from "@/server/services/inquiries";
+import { createStory } from "@/server/services/stories";
 import { createProduct } from "@/server/services/suppliers";
 import { setSupplierKyc, setCustomerKyc } from "@/server/services/admin";
 import { getCustomerId, getSupplierId, isAdmin, errMsg } from "@/server/session";
@@ -187,6 +188,42 @@ export async function setOrderStatusAction(formData: FormData) {
   }
   revalidatePath("/supplier/orders");
   redirect("/supplier/orders");
+}
+
+// --- stories ---
+
+export async function createStoryAction(formData: FormData) {
+  const supplierId = await getSupplierId();
+  if (!supplierId) redirect("/login?next=/supplier/stories");
+  try {
+    await createStory(supplierId as string, {
+      type: str(formData.get("type")) || "product",
+      mediaUrl: str(formData.get("mediaUrl")),
+      caption: str(formData.get("caption")),
+      linkedProductId: str(formData.get("linkedProductId")),
+      offerText: str(formData.get("offerText")),
+      isHighlight: str(formData.get("isHighlight")) === "on",
+    });
+  } catch (e) {
+    redirect(`/supplier/stories?error=${encodeURIComponent(errMsg(e))}`);
+  }
+  revalidatePath("/supplier/stories");
+  revalidatePath("/stories");
+  redirect("/supplier/stories?created=1");
+}
+
+export async function storyInquiryAction(formData: FormData) {
+  const storyId = str(formData.get("storyId"));
+  const productId = str(formData.get("productId"));
+  const message = str(formData.get("message"));
+  const customerId = await getCustomerId();
+  if (!customerId) redirect(`/login?next=${encodeURIComponent(`/stories/${storyId}`)}`);
+  try {
+    await createInquiry(customerId as string, productId, message, "in_app", storyId);
+  } catch (e) {
+    redirect(`/stories/${storyId}?error=${encodeURIComponent(errMsg(e))}`);
+  }
+  redirect(`/stories/${storyId}?inquiry=1`);
 }
 
 // --- admin ---

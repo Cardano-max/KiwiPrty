@@ -526,6 +526,33 @@ async function main() {
     });
   }
 
+  console.log("Creating supplier stories…");
+  const in24h = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const storySpecs: { product: string; caption: string; offer?: string; highlight?: boolean; img: string }[] = [
+    { product: "Balloon Decoration Kit (Blue Theme)", caption: "New blue-theme arch just dropped! 🎈", offer: "15% off this week", img: "story-balloonblue" },
+    { product: "Foil Curtain (Gold)", caption: "Our best-selling photo-booth backdrop ✨", highlight: true, img: "story-foilgold" },
+    { product: "Oh Baby Decoration Combo (Blue)", caption: "Trending for baby showers this season 💙", offer: "Combo price", img: "story-ohbaby" },
+    { product: "Welcome Baby Decoration Kit", caption: "Fresh imported stock — limited pieces!", offer: "Festival pre-booking open", img: "story-welcomebaby" },
+    { product: "Diwali Décor Hanging Set", caption: "Diwali collection is live 🪔", highlight: true, img: "story-diwali" },
+  ];
+  for (const spec of storySpecs) {
+    const product = await prisma.product.findFirst({ where: { name: spec.product } });
+    if (!product) continue;
+    await prisma.story.create({
+      data: {
+        supplierId: product.supplierId,
+        type: spec.offer ? "offer" : "product",
+        mediaUrl: img(spec.img),
+        caption: spec.caption,
+        linkedProductId: product.id,
+        offerText: spec.offer,
+        isHighlight: !!spec.highlight,
+        expiresAt: in24h,
+        viewCount: Math.floor(Math.random() * 400),
+      },
+    });
+  }
+
   const counts = {
     users: await prisma.user.count(),
     suppliers: await prisma.supplierProfile.count(),
