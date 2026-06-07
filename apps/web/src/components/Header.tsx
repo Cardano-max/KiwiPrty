@@ -36,6 +36,9 @@ export default async function Header() {
           <Link href="/stories" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
             Stories
           </Link>
+          <Link href="/pricing" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
+            Pricing
+          </Link>
 
           {(!user || user.role === "customer") && (
             <Link href="/cart" className="relative rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">

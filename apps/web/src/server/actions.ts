@@ -14,6 +14,7 @@ import { setSupplierOrderStatus } from "@/server/services/orders";
 import { createInquiry } from "@/server/services/inquiries";
 import { createReview } from "@/server/services/reviews";
 import { toggleFavorite } from "@/server/services/favorites";
+import { activateMembership } from "@/server/services/subscriptions";
 import { createStory } from "@/server/services/stories";
 import { createProduct } from "@/server/services/suppliers";
 import { setSupplierKyc, setCustomerKyc } from "@/server/services/admin";
@@ -190,6 +191,21 @@ export async function setOrderStatusAction(formData: FormData) {
   }
   revalidatePath("/supplier/orders");
   redirect("/supplier/orders");
+}
+
+// --- membership ---
+
+export async function subscribeAction() {
+  const s = await getSession();
+  if (!s) redirect("/login?next=/pricing");
+  if (s.role !== "customer" && s.role !== "supplier") redirect("/pricing");
+  try {
+    await activateMembership(s.userId, s.role);
+  } catch (e) {
+    redirect(`/pricing?error=${encodeURIComponent(errMsg(e))}`);
+  }
+  revalidatePath("/pricing");
+  redirect("/pricing?subscribed=1");
 }
 
 // --- wishlist ---
