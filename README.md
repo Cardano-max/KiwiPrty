@@ -68,15 +68,38 @@ Read in this order. Each doc is self-contained but they build on each other.
 
 ---
 
+## Running app (MVP core)
+
+A **runnable, tested** implementation of the marketplace core now lives in
+[`apps/web/`](apps/web) — Next.js + TypeScript + Prisma. It implements the real B2B buying loop
+with the hard parts done for real: price slabs / MOQ / quantity-multiples, the **multi-supplier
+order split**, and **per-supplier GST invoicing**, plus supplier and admin surfaces, OTP auth, and a
+JSON API for future mobile apps.
+
+```bash
+cd apps/web
+cp .env.example .env
+npm install
+npm run setup      # generate client + create SQLite db + seed demo data
+npm run dev        # http://localhost:3000
+npm test           # 24 passing domain unit tests
+```
+
+Demo logins (OTP `123456`): buyer `9000000001`, supplier `9000000010`, admin `9000000099`.
+Full details, API reference, and the implemented-vs-deferred list are in
+[`apps/web/README.md`](apps/web/README.md).
+
 ## Status
 
 | Area | Status |
 |---|---|
 | Product requirements | ✅ Documented |
 | Architecture & tech stack | ✅ Recommended |
-| Data model | ✅ Drafted |
+| Data model | ✅ Drafted + implemented (Prisma) |
 | MVP scope & roadmap | ✅ Defined |
-| Application code | ⛔ Not started — next step is scaffolding the MVP (see doc 5, Phase 0) |
+| **MVP core app** | ✅ **Built & verified** — catalogue, search, multi-supplier cart/orders, GST invoices, supplier dashboard, admin KYC, OTP auth, REST API; build green; 24 unit tests pass |
+| Payments / WhatsApp / SMS | ⏳ Mocked behind clear seams (Razorpay / BSP / MSG91 are deferred integrations) |
+| AI agents, mobile apps, Stories, full SEO | ⛔ Deferred to later phases (see doc 4 & 5) |
 
-When you're ready to start building, the natural next step is **Phase 0** in the roadmap:
-scaffold the monorepo, set up CI/CD, and stand up auth + the supplier/customer/product data model.
+This is the **MVP core slice**, not the full 150-feature platform — it proves the central loop end
+to end. The remaining breadth is scoped and sequenced in docs 4 and 5.
