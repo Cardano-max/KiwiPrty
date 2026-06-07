@@ -23,7 +23,12 @@ export default async function OrdersPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold">Your orders</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Your orders</h1>
+        <Link href="/reports" className="text-sm font-semibold text-kiwi-600 hover:underline">
+          Purchase report →
+        </Link>
+      </div>
       {orders.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
           No orders yet. <Link href="/products" className="text-kiwi-600 hover:underline">Browse products</Link>.

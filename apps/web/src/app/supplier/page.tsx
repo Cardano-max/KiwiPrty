@@ -42,6 +42,9 @@ export default async function SupplierDashboard({
           <Link href="/supplier/stories" className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold hover:bg-gray-50">
             Stories
           </Link>
+          <Link href="/supplier/analytics" className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold hover:bg-gray-50">
+            Analytics
+          </Link>
           <Link href="/supplier/products/new" className="rounded-lg bg-kiwi-600 px-3 py-2 text-sm font-semibold text-white hover:bg-kiwi-700">
             + Add product
           </Link>
