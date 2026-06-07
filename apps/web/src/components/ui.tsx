@@ -40,6 +40,16 @@ export function Badge({ children, tone = "kiwi" }: { children: React.ReactNode; 
   return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>;
 }
 
+export function Stars({ value, className = "text-sm" }: { value: number; className?: string }) {
+  const full = Math.round(value);
+  return (
+    <span className={className} aria-label={`${value.toFixed(1)} out of 5`}>
+      <span className="text-amber-500">{"★".repeat(full)}</span>
+      <span className="text-gray-300">{"★".repeat(Math.max(0, 5 - full))}</span>
+    </span>
+  );
+}
+
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`rounded-xl border border-gray-200 bg-white shadow-sm ${className}`}>{children}</div>

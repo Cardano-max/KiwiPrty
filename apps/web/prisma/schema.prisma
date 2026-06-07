@@ -63,6 +63,7 @@ model SupplierProfile {
   inquiries      Inquiry[]
   subscriptions  Subscription[]
   stories        Story[]
+  reviews        Review[]
 }
 
 // ---------------------------------------------------------------------------
@@ -91,6 +92,7 @@ model CustomerProfile {
   inquiries     Inquiry[]
   subscriptions Subscription[]
   storyViews    StoryView[]
+  reviews       Review[]
 }
 
 model Address {
@@ -153,6 +155,8 @@ model Product {
   viewCount       Int      @default(0)
   inquiryCount    Int      @default(0)
   orderCount      Int      @default(0)
+  ratingAvg       Float    @default(0)
+  ratingCount     Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -162,6 +166,7 @@ model Product {
   orderItems    OrderItem[]
   inquiries     Inquiry[]
   linkedStories Story[]       @relation("ProductStories")
+  reviews       Review[]
 }
 
 model ProductImage {
@@ -315,6 +320,22 @@ model StoryView {
   viewedAt   DateTime        @default(now())
 
   @@unique([storyId, customerId])
+}
+
+// Verified-purchase product reviews. Supplier trust score is derived from these.
+model Review {
+  id         String          @id @default(cuid())
+  productId  String
+  product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplierId String
+  supplier   SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  rating     Int // 1..5
+  text       String?
+  createdAt  DateTime        @default(now())
+
+  @@unique([productId, customerId])
 }
 
 // ---------------------------------------------------------------------------

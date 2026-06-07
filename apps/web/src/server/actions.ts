@@ -12,6 +12,7 @@ import { addToCart, updateCartItem, removeCartItem } from "@/server/services/car
 import { checkout } from "@/server/services/orders";
 import { setSupplierOrderStatus } from "@/server/services/orders";
 import { createInquiry } from "@/server/services/inquiries";
+import { createReview } from "@/server/services/reviews";
 import { createStory } from "@/server/services/stories";
 import { createProduct } from "@/server/services/suppliers";
 import { setSupplierKyc, setCustomerKyc } from "@/server/services/admin";
@@ -188,6 +189,24 @@ export async function setOrderStatusAction(formData: FormData) {
   }
   revalidatePath("/supplier/orders");
   redirect("/supplier/orders");
+}
+
+// --- reviews ---
+
+export async function createReviewAction(formData: FormData) {
+  const productId = str(formData.get("productId"));
+  const slug = str(formData.get("slug"));
+  const rating = num(formData.get("rating"));
+  const text = str(formData.get("text"));
+  const customerId = await getCustomerId();
+  if (!customerId) redirect(`/login?next=${encodeURIComponent(`/products/${slug}`)}`);
+  try {
+    await createReview(customerId as string, productId, rating, text);
+  } catch (e) {
+    redirect(`/products/${slug}?error=${encodeURIComponent(errMsg(e))}`);
+  }
+  revalidatePath(`/products/${slug}`);
+  redirect(`/products/${slug}?reviewed=1`);
 }
 
 // --- stories ---

@@ -504,6 +504,59 @@ async function main() {
     },
   });
 
+  console.log("Creating a sample delivered order + review…");
+  const blueKit = await prisma.product.findFirst({
+    where: { name: "Balloon Decoration Kit (Blue Theme)" },
+  });
+  if (blueKit) {
+    const qty = blueKit.moq;
+    const unit = blueKit.basePricePaise;
+    const subtotal = unit * qty;
+    const gst = Math.round((subtotal * blueKit.gstPercent) / 100);
+    const total = subtotal + gst;
+    const order = await prisma.order.create({
+      data: { customerId: customerUser.customer!.id, totalPaise: total, paymentStatus: "paid" },
+    });
+    const so = await prisma.supplierOrder.create({
+      data: {
+        orderId: order.id,
+        supplierId: blueKit.supplierId,
+        status: "delivered",
+        subtotalPaise: subtotal,
+        gstPaise: gst,
+        totalPaise: total,
+        items: {
+          create: [
+            {
+              productId: blueKit.id,
+              productName: blueKit.name,
+              quantity: qty,
+              unitPricePaise: unit,
+              gstPercent: blueKit.gstPercent,
+              lineTotalPaise: total,
+            },
+          ],
+        },
+      },
+    });
+    await prisma.invoice.create({
+      data: { supplierOrderId: so.id, number: "KP-2026-000001", amountPaise: total, gstPaise: gst },
+    });
+    await prisma.review.create({
+      data: {
+        productId: blueKit.id,
+        supplierId: blueKit.supplierId,
+        customerId: customerUser.customer!.id,
+        rating: 5,
+        text: "Great quality and fast dispatch. Will reorder for our events.",
+      },
+    });
+    await prisma.product.update({
+      where: { id: blueKit.id },
+      data: { ratingAvg: 5, ratingCount: 1, orderCount: { increment: 1 } },
+    });
+  }
+
   await prisma.user.create({
     data: { phone: "9000000099", name: "Kiwi Admin", role: "admin" },
   });

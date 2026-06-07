@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductBySlug } from "@/server/services/catalog";
+import { getCustomerId } from "@/server/session";
+import { listProductReviews, getCustomerReview, hasPurchased } from "@/server/services/reviews";
 import { formatPaise } from "@/domain/money";
-import { TagList, SubmitButton, Badge } from "@/components/ui";
-import { addToCartAction, inquiryAction } from "@/server/actions";
+import { TagList, SubmitButton, Badge, Stars } from "@/components/ui";
+import { addToCartAction, inquiryAction, createReviewAction } from "@/server/actions";
 import { parseList } from "@/server/mappers";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +15,7 @@ export default async function ProductPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ error?: string; inquiry?: string }>;
+  searchParams: Promise<{ error?: string; inquiry?: string; reviewed?: string }>;
 }) {
   const { slug } = await params;
   const sp = await searchParams;
@@ -22,6 +24,13 @@ export default async function ProductPage({
 
   const inStock = product.stockQuantity > 0 && product.status === "active";
   const badges = parseList(product.supplier.verifiedBadges);
+
+  const customerId = await getCustomerId();
+  const [reviews, purchased, myReview] = await Promise.all([
+    listProductReviews(product.id),
+    customerId ? hasPurchased(customerId, product.id) : Promise.resolve(false),
+    customerId ? getCustomerReview(customerId, product.id) : Promise.resolve(null),
+  ]);
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">
@@ -43,7 +52,15 @@ export default async function ProductPage({
           <TagList tags={product.tags} />
         </div>
         <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
-        <div className="mt-1 text-sm text-gray-500">{product.category.name}</div>
+        <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
+          <span>{product.category.name}</span>
+          {product.ratingCount > 0 && (
+            <span className="flex items-center gap-1">
+              <Stars value={product.ratingAvg} className="text-xs" />
+              <span>{product.ratingAvg.toFixed(1)} ({product.ratingCount})</span>
+            </span>
+          )}
+        </div>
 
         <div className="mt-4 flex items-baseline gap-2">
           <span className="text-3xl font-extrabold text-kiwi-700">
@@ -100,6 +117,11 @@ export default async function ProductPage({
         {sp.inquiry && (
           <div className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
             Inquiry sent to the supplier. They&apos;ll get back to you with the best price.
+          </div>
+        )}
+        {sp.reviewed && (
+          <div className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            Thanks — your review has been posted.
           </div>
         )}
 
@@ -161,6 +183,60 @@ export default async function ProductPage({
               <SubmitButton variant="outline">Get best price</SubmitButton>
             </div>
           </form>
+        </div>
+
+        {/* Reviews */}
+        <div className="mt-6">
+          <h2 className="text-lg font-bold">Reviews</h2>
+          {reviews.length === 0 ? (
+            <p className="mt-1 text-sm text-gray-500">No reviews yet.</p>
+          ) : (
+            <div className="mt-2 space-y-3">
+              {reviews.map((r) => (
+                <div key={r.id} className="rounded-lg border border-gray-200 p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold">{r.customer.shopName}</span>
+                    <Stars value={r.rating} className="text-xs" />
+                  </div>
+                  {r.text && <p className="mt-1 text-sm text-gray-600">{r.text}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {purchased ? (
+            <form action={createReviewAction} className="mt-4 rounded-lg border border-gray-200 p-3">
+              <input type="hidden" name="productId" value={product.id} />
+              <input type="hidden" name="slug" value={product.slug} />
+              <div className="text-sm font-semibold">{myReview ? "Edit your review" : "Write a review"}</div>
+              <div className="mt-2 flex items-center gap-2">
+                <label className="text-xs text-gray-500">Rating</label>
+                <select
+                  name="rating"
+                  defaultValue={myReview?.rating ?? 5}
+                  className="rounded border border-gray-300 px-2 py-1 text-sm"
+                >
+                  {[5, 4, 3, 2, 1].map((n) => (
+                    <option key={n} value={n}>
+                      {n} ★
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <textarea
+                name="text"
+                rows={2}
+                defaultValue={myReview?.text ?? ""}
+                placeholder="Share your experience…"
+                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-kiwi-400"
+              />
+              <div className="mt-2">
+                <SubmitButton variant="outline">{myReview ? "Update review" : "Submit review"}</SubmitButton>
+              </div>
+            </form>
+          ) : customerId ? (
+            <p className="mt-2 text-xs text-gray-400">Order this product to leave a review.</p>
+          ) : null}
         </div>
       </div>
     </div>

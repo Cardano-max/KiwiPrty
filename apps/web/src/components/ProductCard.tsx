@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { formatPaise } from "@/domain/money";
-import { TagList } from "@/components/ui";
+import { TagList, Stars } from "@/components/ui";
 
 interface ProductCardProps {
   product: {
@@ -12,6 +12,8 @@ interface ProductCardProps {
     serviceCity: string | null;
     status: string;
     tags: string;
+    ratingAvg: number;
+    ratingCount: number;
     images: { url: string }[];
     supplier: { companyName: string; city: string | null };
   };
@@ -51,6 +53,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span className="text-xs font-normal text-gray-500"> / {product.unitLabel}</span>
         </div>
         <div className="mt-1 text-xs text-gray-500">MOQ {product.moq} {product.unitLabel}</div>
+        {product.ratingCount > 0 && (
+          <div className="mt-0.5 text-xs">
+            <Stars value={product.ratingAvg} className="text-[11px]" />{" "}
+            <span className="text-gray-400">({product.ratingCount})</span>
+          </div>
+        )}
         <div className="mt-auto pt-2 text-xs text-gray-600">
           {product.supplier.companyName}
           {product.serviceCity ? ` · ${product.serviceCity}` : ""}
