@@ -128,6 +128,56 @@ export async function parseSearchQuery(
   }
 }
 
+// --- AI sales assistant ---
+
+export interface AssistantProduct {
+  name: string;
+  slug: string;
+  pricePaise: number;
+  unitLabel: string;
+  supplier: string;
+}
+
+export async function assistantReply(
+  message: string,
+  products: AssistantProduct[],
+): Promise<{ text: string; source: "ai" | "fallback" }> {
+  const list = products
+    .slice(0, 5)
+    .map((p) => `- ${p.name} (₹${(p.pricePaise / 100).toFixed(0)}/${p.unitLabel}, ${p.supplier})`)
+    .join("\n");
+
+  const fallback = products.length
+    ? `Here are some matching products on Kiwi Party:\n${list}\n\nShare your quantity and city and I'll help you get the best price.`
+    : `I couldn't find a direct match. Try terms like "balloons", "baby shower", "birthday" or "Diwali decoration".`;
+
+  if (!process.env.ANTHROPIC_API_KEY) return { text: fallback, source: "fallback" };
+  try {
+    const Anthropic = (await import("@anthropic-ai/sdk")).default;
+    const client = new Anthropic();
+    const res = await client.messages.create({
+      model: process.env.KIWI_AI_MODEL || "claude-opus-4-8",
+      max_tokens: 600,
+      system:
+        "You are Kiwi Party's AI sourcing assistant for a B2B party-supplies marketplace in India. " +
+        "Help bulk buyers (party shops, decorators, event planners) find products. Be concise and " +
+        "practical. Only recommend from the provided product list; if nothing fits, say so and " +
+        "suggest search terms. Never invent products or prices.",
+      messages: [
+        {
+          role: "user",
+          content: `Buyer asks: "${message}"\n\nMatching products:\n${list || "(none)"}\n\nReply helpfully.`,
+        },
+      ],
+    });
+    const block = res.content.find((b) => b.type === "text") as { text?: string } | undefined;
+    const text = block?.text?.trim();
+    return text ? { text, source: "ai" } : { text: fallback, source: "fallback" };
+  } catch {
+    return { text: fallback, source: "fallback" };
+  }
+}
+
 export async function generateProductDescription(
   i: ProductDescInput,
 ): Promise<{ text: string; source: "ai" | "fallback" }> {

@@ -2,7 +2,10 @@ import { prisma } from "@/server/db";
 import { validateQuantity } from "@/domain/pricing";
 import { splitCartIntoSupplierOrders, type CartLine } from "@/domain/order";
 import { invoiceNumber } from "@/domain/invoice";
-import { toPricing } from "@/server/mappers";
+import { formatPaise } from "@/domain/money";
+import { toPricing, parseList } from "@/server/mappers";
+import { notify } from "@/server/services/notifications";
+import { isConfigured } from "@/server/config";
 
 const supplierOrderInclude = {
   items: true,
@@ -92,6 +95,42 @@ export async function checkout(customerId: string) {
     await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
     return order;
   });
+
+  // Record the payment. Mock by default; with Razorpay configured the real
+  // capture is confirmed via the webhook (see /api/payments/razorpay/webhook).
+  await prisma.payment.create({
+    data: {
+      purpose: "order",
+      referenceId: created.id,
+      amountPaise: split.totalPaise,
+      status: "paid",
+      provider: isConfigured.razorpay() ? "razorpay" : "mock",
+    },
+  });
+
+  // Notify suppliers and the buyer (in-app + WhatsApp when configured).
+  const buyer = await prisma.customerProfile.findUnique({ where: { id: customerId } });
+  for (const so of split.supplierOrders) {
+    const supplier = await prisma.supplierProfile.findUnique({ where: { id: so.supplierId } });
+    if (supplier) {
+      await notify(supplier.userId, {
+        type: "order",
+        title: "New order received",
+        body: `Order worth ${formatPaise(so.totalPaise)}`,
+        link: "/supplier/orders",
+        phone: parseList(supplier.mobiles)[0],
+        viaWhatsApp: true,
+      });
+    }
+  }
+  if (buyer) {
+    await notify(buyer.userId, {
+      type: "order",
+      title: "Order placed 🎉",
+      body: `Confirmed across ${split.supplierOrders.length} supplier(s).`,
+      link: `/orders/${created.id}`,
+    });
+  }
 
   return getOrder(created.id, customerId);
 }

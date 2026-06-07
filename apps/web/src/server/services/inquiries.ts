@@ -1,5 +1,7 @@
 import { prisma } from "@/server/db";
 import { scoreLead } from "@/domain/leadScore";
+import { notify } from "@/server/services/notifications";
+import { parseList } from "@/server/mappers";
 
 export async function createInquiry(
   customerId: string,
@@ -33,6 +35,19 @@ export async function createInquiry(
     where: { id: productId },
     data: { inquiryCount: { increment: 1 } },
   });
+
+  // notify the supplier (in-app + WhatsApp when configured)
+  const supplier = await prisma.supplierProfile.findUnique({ where: { id: product.supplierId } });
+  if (supplier) {
+    await notify(supplier.userId, {
+      type: "inquiry",
+      title: `New inquiry (${score})`,
+      body: message,
+      link: "/supplier",
+      phone: parseList(supplier.mobiles)[0],
+      viaWhatsApp: true,
+    });
+  }
   return inquiry;
 }
 

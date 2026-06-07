@@ -15,6 +15,7 @@ import { createInquiry } from "@/server/services/inquiries";
 import { createReview } from "@/server/services/reviews";
 import { toggleFavorite } from "@/server/services/favorites";
 import { activateMembership } from "@/server/services/subscriptions";
+import { markAllRead } from "@/server/services/notifications";
 import { createStory } from "@/server/services/stories";
 import { createProduct } from "@/server/services/suppliers";
 import { setSupplierKyc, setCustomerKyc } from "@/server/services/admin";
@@ -191,6 +192,16 @@ export async function setOrderStatusAction(formData: FormData) {
   }
   revalidatePath("/supplier/orders");
   redirect("/supplier/orders");
+}
+
+// --- notifications ---
+
+export async function markAllReadAction() {
+  const s = await getSession();
+  if (!s) redirect("/login?next=/notifications");
+  await markAllRead(s.userId);
+  revalidatePath("/notifications");
+  redirect("/notifications");
 }
 
 // --- membership ---

@@ -1,15 +1,46 @@
 import { prisma } from "@/server/db";
 import { signToken, type Role } from "@/server/auth";
+import { config, isConfigured } from "@/server/config";
+import { sendOtpSms } from "@/server/integrations/sms";
 
-const DEV_OTP = process.env.DEV_OTP ?? "123456";
+function genOtp(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
 
-/** Dev OTP: returned to the client so login works without a real SMS provider. */
+/**
+ * Request an OTP. With an SMS provider configured, generate + store a random
+ * code and send it; in dev (no provider) return the fixed DEV_OTP so login works.
+ */
+export async function requestOtp(phone: string): Promise<{ sent: boolean; devOtp?: string }> {
+  if (!phone) throw new Error("Phone number is required");
+  if (isConfigured.sms()) {
+    const code = genOtp();
+    await prisma.otpCode.create({
+      data: { phone, code, expiresAt: new Date(Date.now() + 5 * 60 * 1000) },
+    });
+    const r = await sendOtpSms(phone, code);
+    return { sent: r.sent };
+  }
+  return { sent: false, devOtp: config.devOtp };
+}
+
+/** Back-compat helper used by the OTP API route. */
 export function devOtpFor(_phone: string): string {
-  return DEV_OTP;
+  return config.devOtp;
 }
 
 export async function loginWithOtp(phone: string, otp: string) {
-  if (DEV_OTP !== "0" && otp !== DEV_OTP) throw new Error("Invalid OTP");
+  if (isConfigured.sms()) {
+    const rec = await prisma.otpCode.findFirst({
+      where: { phone, consumed: false, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!rec || rec.code !== otp) throw new Error("Invalid or expired OTP");
+    await prisma.otpCode.update({ where: { id: rec.id }, data: { consumed: true } });
+  } else if (config.devOtp !== "0" && otp !== config.devOtp) {
+    throw new Error("Invalid OTP");
+  }
+
   const user = await prisma.user.findUnique({
     where: { phone },
     include: { supplier: true, customer: true },

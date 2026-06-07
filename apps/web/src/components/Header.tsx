@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { currentUser, getCustomerId } from "@/server/session";
 import { cartCount } from "@/server/services/cart";
+import { unreadCount } from "@/server/services/notifications";
 import { logoutAction } from "@/server/actions";
 
 export default async function Header() {
@@ -10,6 +11,7 @@ export default async function Header() {
     const customerId = await getCustomerId();
     if (customerId) count = await cartCount(customerId);
   }
+  const unread = user ? await unreadCount(user.id) : 0;
 
   return (
     <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur">
@@ -35,6 +37,9 @@ export default async function Header() {
           </Link>
           <Link href="/stories" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
             Stories
+          </Link>
+          <Link href="/assistant" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
+            AI Assistant
           </Link>
           <Link href="/pricing" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
             Pricing
@@ -69,6 +74,17 @@ export default async function Header() {
           {user?.role === "admin" && (
             <Link href="/admin" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
               Admin
+            </Link>
+          )}
+
+          {user && (
+            <Link href="/notifications" className="relative rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
+              🔔
+              {unread > 0 && (
+                <span className="absolute right-0 top-0 rounded-full bg-party-pink px-1.5 text-xs font-bold text-white">
+                  {unread}
+                </span>
+              )}
             </Link>
           )}
 

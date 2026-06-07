@@ -31,6 +31,7 @@ model User {
   supplier  SupplierProfile?
   customer  CustomerProfile?
   auditLogs AuditLog[]
+  notifications Notification[]
 }
 
 // ---------------------------------------------------------------------------
@@ -350,6 +351,46 @@ model Favorite {
   createdAt  DateTime        @default(now())
 
   @@unique([customerId, productId])
+}
+
+// In-app notification (also the sink for WhatsApp/SMS/email dispatch).
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // order | inquiry | system | payment
+  title     String
+  body      String?
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// OTP codes for phone login (used when an SMS provider is configured;
+// in dev the fixed DEV_OTP is accepted instead).
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+}
+
+// Payment record for orders and subscriptions (mock or Razorpay).
+model Payment {
+  id                String   @id @default(cuid())
+  purpose           String // order | subscription
+  referenceId       String
+  amountPaise       Int
+  status            String   @default("created") // created | paid | failed
+  provider          String   @default("mock") // mock | razorpay
+  providerOrderId   String?
+  providerPaymentId String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 // ---------------------------------------------------------------------------
