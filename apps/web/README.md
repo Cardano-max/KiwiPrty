@@ -74,8 +74,25 @@ to see the order and lead, or the **admin** to approve the pending supplier ("Ne
   workflow with audit logging.
 - **Subscriptions** — supplier (yearly) and buyer (monthly) plans seeded; subscription revenue in
   admin KPIs. (Razorpay wiring is a deferred integration — see below.)
-- **REST API** — `/api/health`, `/api/products`, `/api/products/[slug]`, `/api/auth/otp`,
-  `/api/auth/login`, `/api/cart`, `/api/checkout`, `/api/orders` (Bearer-auth) for mobile clients.
+- **AI sales assistant** — `/assistant` chat + `/api/ai/chat` (Claude when configured, product-search
+  fallback that reuses the AI query parser).
+- **Notifications** — in-app bell + `/notifications`, fired on inquiry & order events (also WhatsApp
+  when configured). **Daily report** cron at `/api/cron/daily-report`.
+- **REST API** — health, products, product detail, auth otp/login, cart, checkout, orders, ai/describe,
+  ai/chat, payments (Razorpay order + webhook) — Bearer-auth where needed, for mobile clients.
+
+### Integrations (env-gated — fill `.env` to go live)
+
+Every integration uses the **real API when its keys are set, and a working dev fallback otherwise**,
+so nothing is blocked while keys are pending. See `.env.example` for the full list.
+
+| Integration | Env keys | Real behaviour | Dev fallback |
+|---|---|---|---|
+| **Claude AI** | `ANTHROPIC_API_KEY` | Descriptions, search parsing, assistant via Claude | Deterministic logic |
+| **OTP/SMS** (MSG91) | `MSG91_AUTH_KEY`, … | OTP generated + SMS-sent, verified from DB | Fixed `DEV_OTP` accepted |
+| **Payments** (Razorpay) | `RAZORPAY_KEY_ID/SECRET/WEBHOOK_SECRET` | Order-intent API + webhook capture | Checkout records a mock payment |
+| **WhatsApp** (Cloud API) | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` | Order/inquiry/report messages | In-app notification only |
+| **Daily report** | `CRON_SECRET` | Scheduler POSTs the endpoint | Disabled (401) |
 
 ## Tests
 
@@ -104,11 +121,11 @@ prisma/
 
 ## What's NOT in this slice (deferred — see /docs roadmap)
 
-Real payment gateway (Razorpay) & SMS/WhatsApp sending are **mocked/stubbed** behind clear seams
-(OTP is returned in dev; checkout marks payment paid). Not yet built: the agentic AI sales/supplier
-assistants & semantic/vector search, mobile apps (React Native), live selling & community, full SEO,
-and real-time logistics. (AI search does NL query understanding today; semantic vector search is the
-next step. Supplier Stories is implemented; live selling and AI story generation remain future work.) These are scoped in
+Razorpay, WhatsApp, SMS/OTP and Claude are **fully wired but env-gated** (table above) — add keys to
+go live; until then the dev fallbacks keep everything working. Not yet built: **React Native mobile
+apps**, semantic/vector AI search, live selling & community, and full SEO depth (blog/CMS, city/
+festival landing pages). The client-side Razorpay Checkout widget is the one remaining wire to take
+real card capture end-to-end (the backend order-intent + webhook are done). These are scoped in
 [`../../docs/04-mvp-scope.md`](../../docs/04-mvp-scope.md) and
 [`../../docs/05-roadmap-and-estimates.md`](../../docs/05-roadmap-and-estimates.md).
 
