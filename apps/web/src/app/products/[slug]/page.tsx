@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductBySlug } from "@/server/services/catalog";
 import { formatPaise } from "@/domain/money";
@@ -126,7 +127,12 @@ export default async function ProductPage({
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-semibold text-gray-900">{product.supplier.companyName}</div>
+              <Link
+                href={`/suppliers/${product.supplier.id}`}
+                className="font-semibold text-gray-900 hover:underline"
+              >
+                {product.supplier.companyName}
+              </Link>
               <div className="text-xs text-gray-500">
                 {product.supplier.city} · {product.supplier.businessType}
               </div>

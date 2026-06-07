@@ -4,6 +4,28 @@ export async function getSupplierByUserId(userId: string) {
   return prisma.supplierProfile.findUnique({ where: { userId } });
 }
 
+/** Public supplier profile: approved supplier with products, active stories and counts. */
+export async function getPublicSupplier(id: string) {
+  const supplier = await prisma.supplierProfile.findFirst({
+    where: { id, kycStatus: "approved" },
+    include: {
+      products: {
+        where: { status: { not: "inactive" } },
+        orderBy: { orderCount: "desc" },
+        include: { images: { take: 1, orderBy: { sortOrder: "asc" } }, supplier: true },
+      },
+      stories: {
+        where: { OR: [{ isHighlight: true }, { expiresAt: { gt: new Date() } }] },
+        orderBy: { createdAt: "desc" },
+        include: { linkedProduct: { include: { images: { take: 1 } } } },
+      },
+    },
+  });
+  if (!supplier) return null;
+  const totalViews = supplier.products.reduce((s, p) => s + p.viewCount, 0);
+  return { supplier, stats: { products: supplier.products.length, stories: supplier.stories.length, totalViews } };
+}
+
 export async function getSupplierDashboard(supplierId: string) {
   const [productCount, supplierOrders, inquiries, products] = await Promise.all([
     prisma.product.count({ where: { supplierId } }),

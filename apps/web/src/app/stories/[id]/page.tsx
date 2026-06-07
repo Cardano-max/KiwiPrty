@@ -34,7 +34,9 @@ export default async function StoryDetail({
 
       <div>
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold">{story.supplier.companyName}</span>
+          <Link href={`/suppliers/${story.supplier.id}`} className="text-lg font-bold hover:underline">
+            {story.supplier.companyName}
+          </Link>
           <Badge tone="green">{story.supplier.city}</Badge>
         </div>
         <div className="mt-1 flex gap-1">
