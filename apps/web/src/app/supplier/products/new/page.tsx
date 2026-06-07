@@ -4,6 +4,7 @@ import { getSupplierId } from "@/server/session";
 import { listCategories } from "@/server/services/catalog";
 import { createProductAction } from "@/server/actions";
 import { SubmitButton } from "@/components/ui";
+import DescribeField from "@/components/DescribeField";
 
 export const dynamic = "force-dynamic";
 
@@ -29,13 +30,13 @@ export default async function NewProductPage({
       <form action={createProductAction} className="space-y-4 rounded-xl border border-gray-200 bg-white p-6">
         <div>
           <label className="block text-xs font-medium text-gray-500">Product name *</label>
-          <input name="name" required className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+          <input id="name" name="name" required className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-gray-500">Category *</label>
-            <select name="categoryId" required className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+            <select id="categoryId" name="categoryId" required className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -43,7 +44,7 @@ export default async function NewProductPage({
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500">Unit label</label>
-            <input name="unitLabel" defaultValue="Set" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+            <input id="unitLabel" name="unitLabel" defaultValue="Set" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
           </div>
         </div>
 
@@ -80,7 +81,7 @@ export default async function NewProductPage({
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500">Colour</label>
-            <input name="color" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+            <input id="color" name="color" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
           </div>
         </div>
 
@@ -89,10 +90,7 @@ export default async function NewProductPage({
           <input name="imageUrl" placeholder="https://…" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
         </div>
 
-        <div>
-          <label className="block text-xs font-medium text-gray-500">Description</label>
-          <textarea name="description" rows={3} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-        </div>
+        <DescribeField />
 
         <SubmitButton>Create product</SubmitButton>
       </form>

@@ -57,8 +57,11 @@ to see the order and lead, or the **admin** to approve the pending supplier ("Ne
 - **Supplier Stories (flagship)** — visual story feed (24h expiry + permanent highlights), story
   detail with add-to-cart / get-best-price CTAs, per-customer **view tracking**, story-attributed
   leads, and a supplier "post story + analytics (views / leads)" manager. See `docs/07`.
-- **Supplier** — dashboard (views / orders / inquiries / sales), product list, add-product form,
-  order status management.
+- **Supplier** — dashboard (views / orders / inquiries / sales), product list, add-product form
+  with **AI "Generate description"**, order status management.
+- **AI seam** — `generateProductDescription` uses **Claude** when `ANTHROPIC_API_KEY` is set and a
+  deterministic fallback otherwise, so it always works and upgrades to LLM output with a key
+  (`POST /api/ai/describe`). This is the task-based AI service pattern from docs/02 §6.
 - **Admin** — platform KPIs (suppliers, customers, GMV, subscription revenue) and **KYC approval**
   workflow with audit logging.
 - **Subscriptions** — supplier (yearly) and buyer (monthly) plans seeded; subscription revenue in
