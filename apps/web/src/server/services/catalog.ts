@@ -89,6 +89,21 @@ export async function getProductBySlug(slug: string) {
   return product;
 }
 
+/** Lightweight product lookup for SEO metadata (no view-count side effect). */
+export async function getProductMeta(slug: string) {
+  return prisma.product.findUnique({
+    where: { slug },
+    select: {
+      name: true,
+      description: true,
+      serviceCity: true,
+      unitLabel: true,
+      basePricePaise: true,
+      category: { select: { name: true } },
+    },
+  });
+}
+
 export async function getCities(): Promise<string[]> {
   const rows = await prisma.product.findMany({
     where: { status: "active", serviceCity: { not: null } },

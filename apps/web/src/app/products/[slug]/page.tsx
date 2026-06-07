@@ -1,6 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProductBySlug } from "@/server/services/catalog";
+import { getProductBySlug, getProductMeta } from "@/server/services/catalog";
 import { getCustomerId } from "@/server/session";
 import { listProductReviews, getCustomerReview, hasPurchased } from "@/server/services/reviews";
 import { isFavorited } from "@/server/services/favorites";
@@ -10,6 +11,22 @@ import { addToCartAction, inquiryAction, createReviewAction, toggleFavoriteActio
 import { parseList } from "@/server/mappers";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const p = await getProductMeta(slug);
+  if (!p) return { title: "Product not found — Kiwi Party" };
+  const title = `${p.name} — wholesale ${p.category.name} | Kiwi Party`;
+  const description = (
+    p.description ??
+    `${p.name} available wholesale${p.serviceCity ? ` from ${p.serviceCity}` : ""} on Kiwi Party.`
+  ).slice(0, 160);
+  return { title, description, openGraph: { title, description } };
+}
 
 export default async function ProductPage({
   params,
