@@ -1,0 +1,26 @@
+# Render blueprint — deploys the Kiwi Party web app as a Docker web service.
+# 1. Push this repo to GitHub (done).
+# 2. On render.com: New → Blueprint → pick this repo. Render reads this file,
+#    builds apps/web/Dockerfile and gives you a public https URL.
+# Free plan note: the SQLite DB is ephemeral and re-seeds with demo data on each
+# restart — perfect for a live preview. For durable data, add a Postgres service
+# and set DATABASE_URL to it (the schema is Postgres-portable).
+
+services:
+  - type: web
+    name: kiwiparty-web
+    runtime: docker
+    dockerfilePath: apps/web/Dockerfile
+    dockerContext: apps/web
+    plan: free
+    autoDeployTrigger: commit
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        value: file:./prod.db
+      # Optional integrations — paste keys to enable real AI / payments / OTP / WhatsApp.
+      # - key: ANTHROPIC_API_KEY
+      #   sync: false
+      # - key: RAZORPAY_KEY_ID
+      #   sync: false
