@@ -20,7 +20,12 @@ export default async function NewProductPage({
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link href="/supplier" className="text-sm text-kiwi-600 hover:underline">← Dashboard</Link>
+      <div className="flex items-center justify-between">
+        <Link href="/supplier" className="text-sm text-kiwi-600 hover:underline">← Dashboard</Link>
+        <Link href="/supplier/products/import" className="text-sm font-semibold text-kiwi-600 hover:underline">
+          Bulk import (CSV) →
+        </Link>
+      </div>
       <h1 className="mb-4 mt-2 text-2xl font-bold">Add product</h1>
 
       {sp.error && (
