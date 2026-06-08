@@ -43,6 +43,7 @@ export default async function RootLayout({
         <footer className="no-print border-t border-gray-200 bg-white">
           <div className="mx-auto max-w-7xl px-4 py-6 text-center text-sm text-gray-500">
             <div className="mb-2 flex justify-center gap-4">
+              <Link href="/compare" className="hover:text-kiwi-600">Compare</Link>
               <Link href="/feedback" className="hover:text-kiwi-600">Feedback</Link>
               <Link href="/disputes" className="hover:text-kiwi-600">Support</Link>
               <Link href="/rfq" className="hover:text-kiwi-600">RFQ</Link>
