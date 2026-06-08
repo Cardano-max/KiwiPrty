@@ -73,4 +73,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ message }),
     }),
+  // supplier
+  supplierSummary: () =>
+    req<{ stats: any; recentOrders: any[]; recentInquiries: any[] }>(`/api/supplier/summary`),
+  supplierProducts: () => req<{ products: any[] }>(`/api/supplier/products`),
+  supplierOrders: () => req<{ orders: any[] }>(`/api/supplier/orders`),
+  setOrderStatus: (supplierOrderId: string, status: string) =>
+    req(`/api/supplier/orders`, { method: "POST", body: JSON.stringify({ supplierOrderId, status }) }),
 };

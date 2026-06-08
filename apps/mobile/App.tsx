@@ -17,6 +17,9 @@ import ProductScreen from "./src/screens/ProductScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import OrdersScreen from "./src/screens/OrdersScreen";
 import AssistantScreen from "./src/screens/AssistantScreen";
+import SupplierDashboardScreen from "./src/screens/SupplierDashboardScreen";
+import SupplierProductsScreen from "./src/screens/SupplierProductsScreen";
+import SupplierOrdersScreen from "./src/screens/SupplierOrdersScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -52,6 +55,9 @@ export default function App() {
             <Stack.Screen name="Login" component={LoginScreen} options={{ title: "Login", presentation: "modal" }} />
             <Stack.Screen name="Orders" component={OrdersScreen} options={{ title: "My Orders" }} />
             <Stack.Screen name="Assistant" component={AssistantScreen} options={{ title: "AI Assistant" }} />
+            <Stack.Screen name="SupplierDashboard" component={SupplierDashboardScreen} options={{ title: "Supplier Dashboard" }} />
+            <Stack.Screen name="SupplierProducts" component={SupplierProductsScreen} options={{ title: "My Products" }} />
+            <Stack.Screen name="SupplierOrders" component={SupplierOrdersScreen} options={{ title: "Supplier Orders" }} />
           </Stack.Navigator>
         </NavigationContainer>
       </AuthProvider>
