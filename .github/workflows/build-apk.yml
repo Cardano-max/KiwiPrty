@@ -1,0 +1,53 @@
+name: Build Android APK
+
+# Builds the installable Android .apk on Expo's cloud (EAS) — runs in GitHub's
+# cloud so you don't need any dev setup. Requirements:
+#   1. Add a repo secret EXPO_TOKEN  (GitHub → Settings → Secrets and variables →
+#      Actions → New repository secret). Get the token at expo.dev → Account →
+#      Settings → Access Tokens.
+#   2. Actions tab → "Build Android APK" → Run workflow.
+# When it finishes, open the printed expo.dev build link (or expo.dev → your
+# project → Builds) to download the .apk.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  android-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify EXPO_TOKEN secret is set
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "::error::Missing EXPO_TOKEN. Add it as a repo secret (Settings → Secrets and variables → Actions). Get one at expo.dev → Account → Settings → Access Tokens."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+
+      - run: npm ci
+
+      - name: Link/create the EAS project
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli@latest init --non-interactive --force || true
+
+      - name: Build Android APK on EAS
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          echo "Triggering the Android APK build on Expo's cloud…"
+          npx eas-cli@latest build --platform android --profile preview --non-interactive --no-wait
+
+      - name: Where to get your APK
+        run: |
+          echo "::notice::Build queued on Expo. Open https://expo.dev → your account → project 'kiwi-party' → Builds → Download the .apk (and there's a QR you can send to the client)."
