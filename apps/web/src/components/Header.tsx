@@ -44,6 +44,9 @@ export default async function Header() {
           <Link href="/rfq" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
             RFQ
           </Link>
+          <Link href="/feedback" className="hidden rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 lg:block">
+            Feedback
+          </Link>
           <Link href="/pricing" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
             Pricing
           </Link>

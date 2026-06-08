@@ -31,7 +31,9 @@ model User {
   supplier  SupplierProfile?
   customer  CustomerProfile?
   auditLogs AuditLog[]
-  notifications Notification[]
+  notifications   Notification[]
+  featureRequests FeatureRequest[]
+  disputes        DisputeTicket[]
 }
 
 // ---------------------------------------------------------------------------
@@ -66,6 +68,7 @@ model SupplierProfile {
   stories        Story[]
   reviews        Review[]
   quotes         Quote[]
+  bookings       AdvanceBooking[]
 }
 
 // ---------------------------------------------------------------------------
@@ -97,6 +100,7 @@ model CustomerProfile {
   reviews       Review[]
   favorites     Favorite[]
   rfqs          Rfq[]
+  bookings      AdvanceBooking[]
 }
 
 model Address {
@@ -173,6 +177,7 @@ model Product {
   linkedStories Story[]       @relation("ProductStories")
   reviews       Review[]
   favoritedBy   Favorite[]
+  bookings      AdvanceBooking[]
 }
 
 model ProductImage {
@@ -372,6 +377,47 @@ model Quote {
   createdAt  DateTime        @default(now())
 
   @@unique([rfqId, supplierId])
+}
+
+// Community feature requests (any user submits; others upvote; admin triages).
+model FeatureRequest {
+  id            String   @id @default(cuid())
+  submittedById String
+  submittedBy   User     @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  title         String
+  detail        String?
+  status        String   @default("open") // open | planned | done | declined
+  votes         Int      @default(0)
+  createdAt     DateTime @default(now())
+}
+
+// Support / dispute tickets raised by buyers or suppliers; admin resolves.
+model DisputeTicket {
+  id         String   @id @default(cuid())
+  orderId    String?
+  raisedById String
+  raisedBy   User     @relation(fields: [raisedById], references: [id], onDelete: Cascade)
+  subject    String
+  message    String
+  status     String   @default("open") // open | in_review | resolved | closed
+  response   String?
+  createdAt  DateTime @default(now())
+}
+
+// Advance booking / pre-order for future or out-of-stock products.
+model AdvanceBooking {
+  id           String          @id @default(cuid())
+  customerId   String
+  customer     CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplierId   String
+  supplier     SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  quantity     Int
+  expectedDate DateTime?
+  note         String?
+  status       String          @default("requested") // requested | confirmed | fulfilled | cancelled
+  createdAt    DateTime        @default(now())
 }
 
 // Buyer wishlist.

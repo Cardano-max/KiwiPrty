@@ -91,9 +91,14 @@ export default async function OrderDetailPage({
         </div>
       ))}
 
-      <Link href="/orders" className="text-sm text-kiwi-600 hover:underline">
-        ← Back to orders
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link href="/orders" className="text-sm text-kiwi-600 hover:underline">
+          ← Back to orders
+        </Link>
+        <Link href={`/disputes?orderId=${order.id}`} className="text-sm text-gray-500 hover:underline">
+          Raise an issue with this order
+        </Link>
+      </div>
     </div>
   );
 }

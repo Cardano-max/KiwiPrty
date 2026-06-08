@@ -7,7 +7,7 @@ import { listProductReviews, getCustomerReview, hasPurchased } from "@/server/se
 import { isFavorited } from "@/server/services/favorites";
 import { formatPaise } from "@/domain/money";
 import { TagList, SubmitButton, Badge, Stars } from "@/components/ui";
-import { addToCartAction, inquiryAction, createReviewAction, toggleFavoriteAction } from "@/server/actions";
+import { addToCartAction, inquiryAction, createReviewAction, toggleFavoriteAction, createBookingAction } from "@/server/actions";
 import { parseList } from "@/server/mappers";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +33,7 @@ export default async function ProductPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ error?: string; inquiry?: string; reviewed?: string }>;
+  searchParams: Promise<{ error?: string; inquiry?: string; reviewed?: string; booked?: string }>;
 }) {
   const { slug } = await params;
   const sp = await searchParams;
@@ -143,6 +143,11 @@ export default async function ProductPage({
             Thanks — your review has been posted.
           </div>
         )}
+        {sp.booked && (
+          <div className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            Advance booking requested — the supplier will confirm soon.
+          </div>
+        )}
 
         {/* Add to cart */}
         {inStock && (
@@ -215,6 +220,34 @@ export default async function ProductPage({
             <div className="mt-2">
               <SubmitButton variant="outline">Get best price</SubmitButton>
             </div>
+          </form>
+        </div>
+
+        {/* Advance booking */}
+        <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+          <h3 className="text-sm font-bold">Pre-book this product</h3>
+          <p className="text-xs text-gray-500">
+            Reserve future stock — useful for festivals or out-of-stock items.
+          </p>
+          <form action={createBookingAction} className="mt-2 flex flex-wrap items-end gap-2">
+            <input type="hidden" name="productId" value={product.id} />
+            <input type="hidden" name="slug" value={product.slug} />
+            <div>
+              <label className="block text-xs text-gray-500">Quantity</label>
+              <input
+                name="quantity"
+                type="number"
+                min={product.moq}
+                step={product.quantityMultiple}
+                defaultValue={product.moq}
+                className="mt-1 w-24 rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500">Needed by</label>
+              <input name="expectedDate" type="date" className="mt-1 rounded-lg border border-gray-300 px-2 py-1.5 text-sm" />
+            </div>
+            <SubmitButton variant="outline">Book in advance</SubmitButton>
           </form>
         </div>
 

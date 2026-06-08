@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/server/session";
 import { adminStats, listSuppliers, listCustomers } from "@/server/services/admin";
@@ -52,7 +53,12 @@ export default async function AdminPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold">Admin Panel</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Admin Panel</h1>
+        <Link href="/admin/disputes" className="text-sm font-semibold text-kiwi-600 hover:underline">
+          Support tickets →
+        </Link>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <Stat label="Suppliers" value={String(stats.suppliers)} />
