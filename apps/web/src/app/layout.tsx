@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import Link from "next/link";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import PWARegister from "@/components/PWARegister";
@@ -41,7 +42,13 @@ export default async function RootLayout({
         <div className="mx-auto max-w-7xl px-4 py-6">{children}</div>
         <footer className="no-print border-t border-gray-200 bg-white">
           <div className="mx-auto max-w-7xl px-4 py-6 text-center text-sm text-gray-500">
-            Kiwi Party — Search Smart, Sell Smart, Grow Smart 🎉 · MVP demo build
+            <div className="mb-2 flex justify-center gap-4">
+              <Link href="/feedback" className="hover:text-kiwi-600">Feedback</Link>
+              <Link href="/disputes" className="hover:text-kiwi-600">Support</Link>
+              <Link href="/rfq" className="hover:text-kiwi-600">RFQ</Link>
+              <Link href="/pricing" className="hover:text-kiwi-600">Pricing</Link>
+            </div>
+            Kiwi Party — Search Smart, Sell Smart, Grow Smart 🎉
           </div>
         </footer>
         <BottomNav accountHref={accountHref} accountLabel={accountLabel} />

@@ -19,6 +19,13 @@ import { markAllRead } from "@/server/services/notifications";
 import { createStory } from "@/server/services/stories";
 import { createRfq, createQuote, closeRfq } from "@/server/services/rfq";
 import { createBooking, setBookingStatus } from "@/server/services/bookings";
+import {
+  createFeatureRequest,
+  voteFeatureRequest,
+  setFeatureStatus,
+  createDispute,
+  resolveDispute,
+} from "@/server/services/community";
 import { createProduct } from "@/server/services/suppliers";
 import { setSupplierKyc, setCustomerKyc } from "@/server/services/admin";
 import { getCustomerId, getSupplierId, isAdmin, errMsg } from "@/server/session";
@@ -286,6 +293,58 @@ export async function storyInquiryAction(formData: FormData) {
     redirect(`/stories/${storyId}?error=${encodeURIComponent(errMsg(e))}`);
   }
   redirect(`/stories/${storyId}?inquiry=1`);
+}
+
+// --- feature requests & disputes ---
+
+export async function createFeatureRequestAction(formData: FormData) {
+  const s = await getSession();
+  if (!s) redirect("/login?next=/feedback");
+  try {
+    await createFeatureRequest(s.userId, str(formData.get("title")), str(formData.get("detail")));
+  } catch (e) {
+    redirect(`/feedback?error=${encodeURIComponent(errMsg(e))}`);
+  }
+  revalidatePath("/feedback");
+  redirect("/feedback?posted=1");
+}
+
+export async function voteFeatureAction(formData: FormData) {
+  const s = await getSession();
+  if (!s) redirect("/login?next=/feedback");
+  await voteFeatureRequest(str(formData.get("id")));
+  revalidatePath("/feedback");
+  redirect("/feedback");
+}
+
+export async function setFeatureStatusAction(formData: FormData) {
+  if (!(await isAdmin())) redirect("/login");
+  await setFeatureStatus(str(formData.get("id")), str(formData.get("status")));
+  revalidatePath("/feedback");
+  redirect("/feedback");
+}
+
+export async function createDisputeAction(formData: FormData) {
+  const s = await getSession();
+  if (!s) redirect("/login?next=/disputes");
+  try {
+    await createDispute(s.userId, {
+      orderId: str(formData.get("orderId")) || undefined,
+      subject: str(formData.get("subject")),
+      message: str(formData.get("message")),
+    });
+  } catch (e) {
+    redirect(`/disputes?error=${encodeURIComponent(errMsg(e))}`);
+  }
+  revalidatePath("/disputes");
+  redirect("/disputes?raised=1");
+}
+
+export async function resolveDisputeAction(formData: FormData) {
+  if (!(await isAdmin())) redirect("/login");
+  await resolveDispute(str(formData.get("id")), str(formData.get("response")), str(formData.get("status")));
+  revalidatePath("/admin/disputes");
+  redirect("/admin/disputes");
 }
 
 // --- advance booking ---
