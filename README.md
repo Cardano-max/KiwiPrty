@@ -22,6 +22,10 @@ To switch on real AI / payments / WhatsApp / SMS, paste your keys into Render's 
 (see [`apps/web/.env.example`](apps/web/.env.example)). Plain-English handover for the client:
 [`DELIVERY.md`](DELIVERY.md).
 
+**📱 Native Android/iOS app:** the app in [`apps/mobile/`](apps/mobile) is a real React Native app.
+To get an **installable APK** (expo.dev download link) to send a client, follow
+[`apps/mobile/BUILD-APK.md`](apps/mobile/BUILD-APK.md).
+
 ---
 
 ## What this product is
