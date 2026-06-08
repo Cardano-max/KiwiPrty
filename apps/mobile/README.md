@@ -1,7 +1,10 @@
 # Kiwi Party — Mobile App (Android + iOS)
 
-The native **customer app**, built with **Expo / React Native** (one codebase → Android **and**
-iOS). It talks to the same backend API as the web app (`apps/web`).
+The native **customer + supplier app**, built with **Expo / React Native** (one codebase → Android
+**and** iOS). It talks to the same backend API as the web app (`apps/web`).
+
+> **Want an installable APK to send a client?** See **[BUILD-APK.md](BUILD-APK.md)** — a few
+> copy-paste commands build the APK on Expo's cloud and give you an expo.dev download link.
 
 ## Screens
 
