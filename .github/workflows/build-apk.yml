@@ -1,16 +1,19 @@
 name: Build Android APK
 
-# Builds the installable Android .apk on Expo's cloud (EAS) — runs in GitHub's
-# cloud so you don't need any dev setup. Requirements:
-#   1. Add a repo secret EXPO_TOKEN  (GitHub → Settings → Secrets and variables →
-#      Actions → New repository secret). Get the token at expo.dev → Account →
-#      Settings → Access Tokens.
-#   2. Actions tab → "Build Android APK" → Run workflow.
-# When it finishes, open the printed expo.dev build link (or expo.dev → your
-# project → Builds) to download the .apk.
+# Builds the installable Android .apk on Expo's cloud (EAS), triggered from
+# GitHub (which has internet to reach Expo). The Expo token is passed as an
+# input at trigger time (and masked in logs).
 
 on:
   workflow_dispatch:
+    inputs:
+      expo_token:
+        description: "Expo access token (expo.dev → Account → Settings → Access Tokens)"
+        required: true
+      api_url:
+        description: "Backend URL the app talks to (EXPO_PUBLIC_API_URL)"
+        required: false
+        default: "https://kiwiparty-web.onrender.com"
 
 jobs:
   android-apk:
@@ -21,12 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify EXPO_TOKEN secret is set
-        run: |
-          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
-            echo "::error::Missing EXPO_TOKEN. Add it as a repo secret (Settings → Secrets and variables → Actions). Get one at expo.dev → Account → Settings → Access Tokens."
-            exit 1
-          fi
+      - name: Mask token
+        run: echo "::add-mask::${{ inputs.expo_token }}"
 
       - uses: actions/setup-node@v4
         with:
@@ -34,20 +33,26 @@ jobs:
           cache: npm
           cache-dependency-path: apps/mobile/package-lock.json
 
+      - name: Set backend URL in eas.json
+        run: |
+          node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('eas.json','utf8'));for(const p of Object.values(j.build)){if(p.env)p.env.EXPO_PUBLIC_API_URL='${{ inputs.api_url }}';}fs.writeFileSync('eas.json',JSON.stringify(j,null,2));"
+          echo "Backend URL set to: ${{ inputs.api_url }}"
+
       - run: npm ci
 
       - name: Link/create the EAS project
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: npx eas-cli@latest init --non-interactive --force || true
+          EXPO_TOKEN: ${{ inputs.expo_token }}
+        run: |
+          npx eas-cli@latest whoami || true
+          npx eas-cli@latest init --non-interactive --force || npx eas-cli@latest init --non-interactive || true
 
-      - name: Build Android APK on EAS
+      - name: Build Android APK on EAS (cloud)
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_TOKEN: ${{ inputs.expo_token }}
         run: |
-          echo "Triggering the Android APK build on Expo's cloud…"
-          npx eas-cli@latest build --platform android --profile preview --non-interactive --no-wait
-
-      - name: Where to get your APK
-        run: |
-          echo "::notice::Build queued on Expo. Open https://expo.dev → your account → project 'kiwi-party' → Builds → Download the .apk (and there's a QR you can send to the client)."
+          set -o pipefail
+          npx eas-cli@latest build --platform android --profile preview --non-interactive --no-wait 2>&1 | tee /tmp/build.out
+          echo ""
+          echo "===== BUILD LINK ====="
+          grep -Eo 'https://expo.dev/[^ ]+' /tmp/build.out | tail -1 || echo "No build URL captured — see logs above."
