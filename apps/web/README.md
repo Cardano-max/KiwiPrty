@@ -28,6 +28,28 @@ npm run dev                   # http://localhost:3000
 Other scripts: `npm run build`, `npm run start`, `npm test`, `npm run typecheck`,
 `npm run db:reset` (wipe + re-push), `npm run seed`.
 
+## Deploy (get a public URL)
+
+This sandbox can't expose a public port, so to see it live either run it locally (above) or deploy:
+
+**Render (one click, free, ~2 min) — recommended for a preview**
+1. The repo already has [`render.yaml`](../../render.yaml) and [`Dockerfile`](Dockerfile).
+2. On [render.com](https://render.com): **New → Blueprint → pick this repo → Apply**.
+3. Render builds the Docker image and gives you a public `https://…onrender.com` URL.
+   On the free plan the SQLite DB is ephemeral and **re-seeds demo data on each restart** — ideal
+   for a preview. (For durable data, add a Postgres service and set `DATABASE_URL`.)
+
+**Any Docker host** (Railway, Fly.io, Cloud Run, a VPS):
+```bash
+docker build -t kiwiparty-web apps/web
+docker run -p 3000:3000 -e JWT_SECRET=$(openssl rand -hex 32) kiwiparty-web
+# → http://localhost:3000  (container seeds itself on start)
+```
+On Railway/Fly: point the service at `apps/web/Dockerfile` and deploy — you'll get a public URL.
+
+**Enable the real integrations** in the host's env vars (Claude, Razorpay, MSG91, WhatsApp) — see
+`.env.example`. Set `NEXT_PUBLIC_SITE_URL` to the deployed URL so sitemap/robots use it.
+
 ## Demo accounts
 
 Login is OTP-based; in development the OTP is fixed to **`123456`** (no SMS provider needed).
