@@ -18,6 +18,7 @@ import { activateMembership } from "@/server/services/subscriptions";
 import { markAllRead } from "@/server/services/notifications";
 import { createStory } from "@/server/services/stories";
 import { createRfq, createQuote, closeRfq } from "@/server/services/rfq";
+import { createBooking, setBookingStatus } from "@/server/services/bookings";
 import { createProduct } from "@/server/services/suppliers";
 import { setSupplierKyc, setCustomerKyc } from "@/server/services/admin";
 import { getCustomerId, getSupplierId, isAdmin, errMsg } from "@/server/session";
@@ -285,6 +286,36 @@ export async function storyInquiryAction(formData: FormData) {
     redirect(`/stories/${storyId}?error=${encodeURIComponent(errMsg(e))}`);
   }
   redirect(`/stories/${storyId}?inquiry=1`);
+}
+
+// --- advance booking ---
+
+export async function createBookingAction(formData: FormData) {
+  const productId = str(formData.get("productId"));
+  const slug = str(formData.get("slug"));
+  const quantity = num(formData.get("quantity"));
+  const expectedDate = str(formData.get("expectedDate"));
+  const note = str(formData.get("note"));
+  const customerId = await getCustomerId();
+  if (!customerId) redirect(`/login?next=${encodeURIComponent(`/products/${slug}`)}`);
+  try {
+    await createBooking(customerId as string, productId, quantity, expectedDate || undefined, note || undefined);
+  } catch (e) {
+    redirect(`/products/${slug}?error=${encodeURIComponent(errMsg(e))}`);
+  }
+  redirect(`/products/${slug}?booked=1`);
+}
+
+export async function setBookingStatusAction(formData: FormData) {
+  const supplierId = await getSupplierId();
+  if (!supplierId) redirect("/login");
+  try {
+    await setBookingStatus(supplierId as string, str(formData.get("bookingId")), str(formData.get("status")));
+  } catch {
+    /* ignore */
+  }
+  revalidatePath("/supplier/bookings");
+  redirect("/supplier/bookings");
 }
 
 // --- RFQ ---
