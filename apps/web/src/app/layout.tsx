@@ -39,7 +39,7 @@ export default async function RootLayout({
       <body className="min-h-screen pb-16 antialiased sm:pb-0">
         <Header />
         <div className="mx-auto max-w-7xl px-4 py-6">{children}</div>
-        <footer className="border-t border-gray-200 bg-white">
+        <footer className="no-print border-t border-gray-200 bg-white">
           <div className="mx-auto max-w-7xl px-4 py-6 text-center text-sm text-gray-500">
             Kiwi Party — Search Smart, Sell Smart, Grow Smart 🎉 · MVP demo build
           </div>

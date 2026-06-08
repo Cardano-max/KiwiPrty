@@ -557,6 +557,16 @@ async function main() {
     });
   }
 
+  await prisma.rfq.create({
+    data: {
+      customerId: customerUser.customer!.id,
+      title: "500 blue latex balloons for a wedding",
+      detail: "Delivery to Mumbai by next week — need best wholesale price.",
+      categoryId: categoryBySlug.get("balloons") ?? null,
+      targetQty: 500,
+    },
+  });
+
   await prisma.user.create({
     data: { phone: "9000000099", name: "Kiwi Admin", role: "admin" },
   });

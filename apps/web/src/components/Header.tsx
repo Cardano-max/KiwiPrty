@@ -14,7 +14,7 @@ export default async function Header() {
   const unread = user ? await unreadCount(user.id) : 0;
 
   return (
-    <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur">
+    <header className="no-print sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-2xl">🎈</span>
@@ -40,6 +40,9 @@ export default async function Header() {
           </Link>
           <Link href="/assistant" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
             AI Assistant
+          </Link>
+          <Link href="/rfq" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
+            RFQ
           </Link>
           <Link href="/pricing" className="rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
             Pricing

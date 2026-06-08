@@ -65,6 +65,7 @@ model SupplierProfile {
   subscriptions  Subscription[]
   stories        Story[]
   reviews        Review[]
+  quotes         Quote[]
 }
 
 // ---------------------------------------------------------------------------
@@ -95,6 +96,7 @@ model CustomerProfile {
   storyViews    StoryView[]
   reviews       Review[]
   favorites     Favorite[]
+  rfqs          Rfq[]
 }
 
 model Address {
@@ -125,6 +127,7 @@ model Category {
   sortOrder   Int        @default(0)
   isActive    Boolean    @default(true)
   products    Product[]
+  rfqs        Rfq[]
 }
 
 // status: active | inactive | out_of_stock
@@ -339,6 +342,36 @@ model Review {
   createdAt  DateTime        @default(now())
 
   @@unique([productId, customerId])
+}
+
+// RFQ — a buyer posts a requirement; suppliers respond with quotes.
+model Rfq {
+  id         String          @id @default(cuid())
+  customerId String
+  customer   CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  categoryId String?
+  category   Category?       @relation(fields: [categoryId], references: [id])
+  title      String
+  detail     String?
+  targetQty  Int?
+  status     String          @default("open") // open | closed
+  createdAt  DateTime        @default(now())
+
+  quotes Quote[]
+}
+
+model Quote {
+  id         String          @id @default(cuid())
+  rfqId      String
+  rfq        Rfq             @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  supplierId String
+  supplier   SupplierProfile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  pricePaise Int
+  moq        Int?
+  note       String?
+  createdAt  DateTime        @default(now())
+
+  @@unique([rfqId, supplierId])
 }
 
 // Buyer wishlist.

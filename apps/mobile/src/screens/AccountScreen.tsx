@@ -21,6 +21,12 @@ export default function AccountScreen({ navigation }: { navigation: any }) {
       </View>
 
       <View style={{ height: 16 }} />
+      {user.role === "supplier" && (
+        <>
+          <PrimaryButton title="🏭 Supplier dashboard" onPress={() => navigation.navigate("SupplierDashboard")} />
+          <View style={{ height: 10 }} />
+        </>
+      )}
       <PrimaryButton title="My orders" onPress={() => navigation.navigate("Orders")} variant="outline" />
       <View style={{ height: 10 }} />
       <PrimaryButton title="AI assistant" onPress={() => navigation.navigate("Assistant")} variant="outline" />

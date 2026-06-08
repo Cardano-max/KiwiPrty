@@ -17,6 +17,7 @@ import { toggleFavorite } from "@/server/services/favorites";
 import { activateMembership } from "@/server/services/subscriptions";
 import { markAllRead } from "@/server/services/notifications";
 import { createStory } from "@/server/services/stories";
+import { createRfq, createQuote, closeRfq } from "@/server/services/rfq";
 import { createProduct } from "@/server/services/suppliers";
 import { setSupplierKyc, setCustomerKyc } from "@/server/services/admin";
 import { getCustomerId, getSupplierId, isAdmin, errMsg } from "@/server/session";
@@ -284,6 +285,51 @@ export async function storyInquiryAction(formData: FormData) {
     redirect(`/stories/${storyId}?error=${encodeURIComponent(errMsg(e))}`);
   }
   redirect(`/stories/${storyId}?inquiry=1`);
+}
+
+// --- RFQ ---
+
+export async function createRfqAction(formData: FormData) {
+  const customerId = await getCustomerId();
+  if (!customerId) redirect("/login?next=/rfq");
+  try {
+    await createRfq(customerId as string, {
+      title: str(formData.get("title")),
+      detail: str(formData.get("detail")),
+      categoryId: str(formData.get("categoryId")) || undefined,
+      targetQty: num(formData.get("targetQty")) || undefined,
+    });
+  } catch (e) {
+    redirect(`/rfq?error=${encodeURIComponent(errMsg(e))}`);
+  }
+  revalidatePath("/rfq");
+  redirect("/rfq?posted=1");
+}
+
+export async function createQuoteAction(formData: FormData) {
+  const supplierId = await getSupplierId();
+  const rfqId = str(formData.get("rfqId"));
+  if (!supplierId) redirect(`/login?next=${encodeURIComponent(`/rfq/${rfqId}`)}`);
+  try {
+    await createQuote(supplierId as string, rfqId, {
+      pricePaise: Math.round(num(formData.get("price")) * 100),
+      moq: num(formData.get("moq")) || undefined,
+      note: str(formData.get("note")) || undefined,
+    });
+  } catch (e) {
+    redirect(`/rfq/${rfqId}?error=${encodeURIComponent(errMsg(e))}`);
+  }
+  revalidatePath(`/rfq/${rfqId}`);
+  redirect(`/rfq/${rfqId}?quoted=1`);
+}
+
+export async function closeRfqAction(formData: FormData) {
+  const customerId = await getCustomerId();
+  const rfqId = str(formData.get("rfqId"));
+  if (!customerId) redirect("/login");
+  await closeRfq(customerId as string, rfqId);
+  revalidatePath(`/rfq/${rfqId}`);
+  redirect(`/rfq/${rfqId}`);
 }
 
 // --- admin ---
