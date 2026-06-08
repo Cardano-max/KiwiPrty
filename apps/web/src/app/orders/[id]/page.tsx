@@ -56,7 +56,9 @@ export default async function OrderDetailPage({
             <div className="flex items-center gap-2">
               <Badge tone="kiwi">{so.status}</Badge>
               {so.invoice && (
-                <span className="text-xs text-gray-500">Invoice {so.invoice.number}</span>
+                <Link href={`/invoice/${so.id}`} className="text-xs font-semibold text-kiwi-600 hover:underline">
+                  Invoice {so.invoice.number} →
+                </Link>
               )}
             </div>
           </div>

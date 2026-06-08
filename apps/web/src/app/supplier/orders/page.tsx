@@ -32,7 +32,13 @@ export default async function SupplierOrdersPage() {
                   <div className="font-semibold">{o.order.customer.shopName}</div>
                   <div className="text-xs text-gray-500">
                     {new Date(o.createdAt).toLocaleString("en-IN")} ·{" "}
-                    {o.invoice ? `Invoice ${o.invoice.number}` : "—"}
+                    {o.invoice ? (
+                      <Link href={`/invoice/${o.id}`} className="font-semibold text-kiwi-600 hover:underline">
+                        Invoice {o.invoice.number}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
                   </div>
                 </div>
                 <div className="text-right">

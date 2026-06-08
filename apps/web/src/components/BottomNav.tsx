@@ -17,7 +17,7 @@ export default function BottomNav({ accountHref, accountLabel }: { accountHref: 
   const all = [...tabs, { href: accountHref, label: accountLabel, icon: "👤" }];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur sm:hidden">
+    <nav className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur sm:hidden">
       <div className="mx-auto flex max-w-md">
         {all.map((t) => {
           const active = isActive(t.href);

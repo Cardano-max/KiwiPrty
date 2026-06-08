@@ -11,3 +11,12 @@ body {
   color: var(--foreground);
   background: #faf9ff;
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
