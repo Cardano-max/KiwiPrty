@@ -1,16 +1,26 @@
-# Kiwi Party AI — Project Foundation
+# Kiwi Party AI — AI Party-Supplies B2B Marketplace
 
-> **Kiwi Party AI** — India's first AI-powered party-supplies **search engine + B2B multivendor marketplace**.
-> Think *IndiaMART + Nivoda + an AI shopping agent*, purpose-built for the party & event-supplies industry.
+> India's AI-powered party-supplies **search engine + B2B multivendor marketplace** — *IndiaMART +
+> Nivoda + an AI shopping agent*, for the party & event-supplies industry.
 
-This repository currently holds the **planning foundation** for the project: the product
-requirements, recommended architecture & tech stack, data model, MVP scope, a phased roadmap
-with timeline/cost estimates, and direct answers to the key questions you'd hand a development
-team. It is the document set you can give to any agency or in-house team to start building — or
-that we can build from directly.
+A **fully working, installable app** is built and runs in [`apps/web/`](apps/web): catalogue, AI
+search, multi-supplier orders with GST invoices, Supplier Stories, reviews, wishlist, notifications,
+supplier & admin tools, and real (env-gated) payments / WhatsApp / SMS / Claude integrations. The
+product & architecture docs are in [`docs/`](docs).
 
-No application code has been written yet. These docs define *what* to build, *in what order*,
-and *with what stack and budget*.
+## 🚀 Go live in one click
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Cardano-max/KiwiPrty)
+
+1. Click the button above → sign in to **Render** with GitHub (free).
+2. Click **Apply** — Render builds and hosts the app and gives you a public `https://…onrender.com` URL.
+3. Open that URL on a phone → browser menu → **Add to Home Screen** → it installs as the **Kiwi Party app** (works like a native app, no app store).
+
+**Demo logins** (OTP `123456`): buyer `9000000001` · supplier `9000000010` · admin `9000000099`.
+
+To switch on real AI / payments / WhatsApp / SMS, paste your keys into Render's **Environment** tab
+(see [`apps/web/.env.example`](apps/web/.env.example)). Plain-English handover for the client:
+[`DELIVERY.md`](DELIVERY.md).
 
 ---
 
